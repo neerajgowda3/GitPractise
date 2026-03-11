@@ -26,8 +26,7 @@ Provar_Execute:
   script:
     - cd QTC_Project/ANT
     - xvfb-run ant -Dprovar.home=$PROVAR_HOME -Dlicense.path=$LICENSE_PATH -f Smoke.xml
-
-
+    
   cache:
     paths:
       - $PROVAR_HOME/.provarCaches
