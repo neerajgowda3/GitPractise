@@ -1,0 +1,39 @@
+# ---------------------------------------------------------
+# JOB 2: YOUR INDEPENDENT 10 SCRIPT EXECUTION
+# ---------------------------------------------------------
+Provar_Execute_MJOF_10_Scripts:
+  stage: ExecuteTestCase
+  image: eclipse-temurin:21
+  tags: [LSEG]
+  when: manual # Only runs when you click the button
+  variables:
+    PROVAR_HOME: "$CI_PROJECT_DIR/PROVAR_HOME"
+    PROVAR_PROJECT: "$CI_PROJECT_DIR/QTC_Project"
+    LICENSE_PATH: "$CI_PROJECT_DIR/QTC_Project/.licenses"
+
+  before_script:
+    - apt-get update && apt-get install -y xvfb wget curl unzip gnupg -qq
+    - apt-get install -y ant
+    - ant -version
+    - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+    - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/chrome.list
+    - apt-get update -y
+    - apt-cache search chrome
+    - apt-get install google-chrome-stable -y
+    - export DISPLAY=:99.0
+    - wget -O /etc/init.d/xvfb https://gist.githubusercontent.com/axilleas/3fc13e0c90ad9f58bee903a41e8a6d48/raw/169a60010635e05eaa902c5f3b4393321f2452f0/xvfb
+    - chmod 0755 /etc/init.d/xvfb
+    - sh -e /etc/init.d/xvfb start
+  script:
+    - cd QTC_Project/ANT
+    - xvfb-run ant -Dprovar.home=$PROVAR_HOME -Dlicense.path=$LICENSE_PATH -f MJOF_TestCases_build.xml
+
+  cache:
+    paths:
+      - $PROVAR_HOME/.provarCaches
+      - $PROVAR_HOME
+  artifacts:
+    when: always
+    paths:
+      # This is the path that saves your PDF and HTML reports
+      - $CI_PROJECT_DIR/QTC_Project/ANT/Results
