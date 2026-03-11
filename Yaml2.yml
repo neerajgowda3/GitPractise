@@ -1,0 +1,93 @@
+stages:
+  - ExecuteTestCase
+
+# ---------------------------------------------------------
+# JOB 1: TEAM'S ORIGINAL AUTOMATED SMOKE TEST
+# ---------------------------------------------------------
+Provar_Execute:
+  stage: ExecuteTestCase
+  image: eclipse-temurin:21
+  tags: [LSEG] # GitLab runner tags
+  variables:
+    PROVAR_HOME: "$CI_PROJECT_DIR/PROVAR_HOME"
+    PROVAR_PROJECT: "$CI_PROJECT_DIR/QTC_Project"
+    LICENSE_PATH: "$CI_PROJECT_DIR/QTC_Project/.licenses"
+
+  before_script:
+    - apt-get update && apt-get install -y xvfb wget curl unzip gnupg -qq
+    - apt-get install -y ant
+    - ant -version
+    - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+    - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/chrome.list
+    - apt-get update -y
+    - apt-cache search chrome
+    - apt-get install google-chrome-stable -y
+    - export DISPLAY=:99.0
+    - wget -O /etc/init.d/xvfb https://gist.githubusercontent.com/axilleas/3fc13e0c90ad9f58bee903a41e8a6d48/raw/169a60010635e05eaa902c5f3b4393321f2452f0/xvfb
+    - chmod 0755 /etc/init.d/xvfb
+    - sh -e /etc/init.d/xvfb start
+  script:
+    - cd QTC_Project/ANT
+    - xvfb-run ant -Dprovar.home=$PROVAR_HOME -Dlicense.path=$LICENSE_PATH -f Smoke.xml
+
+  cache:
+    paths:
+      - $PROVAR_HOME/.provarCaches
+      - $PROVAR_HOME
+  artifacts:
+    when : always
+    paths:
+      - $CI_PROJECT_DIR/QTC_Project/ANT/TestData
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Test Data_LDA_DataCreation.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Test Data_Non_LDA_DataCreation.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Account_TestData_LDA_Output.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Account_TestData_LDA_Output - Set2.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Account_TestData_Non_LDA_Output - Set2.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Account_TestData_Non_LDA_Output.xlsx
+
+
+# ---------------------------------------------------------
+# JOB 2: YOUR INDEPENDENT 10 SCRIPT EXECUTION
+# ---------------------------------------------------------
+Provar_Execute_MJOF_10_Scripts:
+  stage: ExecuteTestCase
+  image: eclipse-temurin:21
+  tags: [LSEG] # GitLab runner tags
+  when: manual # Critical: Stops this from auto-running on every commit
+  variables:
+    PROVAR_HOME: "$CI_PROJECT_DIR/PROVAR_HOME"
+    PROVAR_PROJECT: "$CI_PROJECT_DIR/QTC_Project"
+    LICENSE_PATH: "$CI_PROJECT_DIR/QTC_Project/.licenses"
+
+  before_script:
+    - apt-get update && apt-get install -y xvfb wget curl unzip gnupg -qq
+    - apt-get install -y ant
+    - ant -version
+    - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+    - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/chrome.list
+    - apt-get update -y
+    - apt-cache search chrome
+    - apt-get install google-chrome-stable -y
+    - export DISPLAY=:99.0
+    - wget -O /etc/init.d/xvfb https://gist.githubusercontent.com/axilleas/3fc13e0c90ad9f58bee903a41e8a6d48/raw/169a60010635e05eaa902c5f3b4393321f2452f0/xvfb
+    - chmod 0755 /etc/init.d/xvfb
+    - sh -e /etc/init.d/xvfb start
+  script:
+    - cd QTC_Project/ANT
+    # Pointed specifically to your new 10-script build file
+    - xvfb-run ant -Dprovar.home=$PROVAR_HOME -Dlicense.path=$LICENSE_PATH -f MJOF_TestCases_build.xml
+
+  cache:
+    paths:
+      - $PROVAR_HOME/.provarCaches
+      - $PROVAR_HOME
+  artifacts:
+    when : always
+    paths:
+      - $CI_PROJECT_DIR/QTC_Project/ANT/TestData
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Test Data_LDA_DataCreation.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Test Data_Non_LDA_DataCreation.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Account_TestData_LDA_Output.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Account_TestData_LDA_Output - Set2.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Account_TestData_Non_LDA_Output - Set2.xlsx
+      - $CI_PROJECT_DIR/QTC_Project/TestData/Account_TestData_Non_LDA_Output.xlsx
