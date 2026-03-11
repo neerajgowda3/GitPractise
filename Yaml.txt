@@ -1,0 +1,25 @@
+Provar_Daily_10_Scripts:
+  stage: ExecuteTestCase
+  image: eclipse-temurin:21
+  tags: [LSEG]
+  when: manual
+  variables:
+    PROVAR_HOME: "$CI_PROJECT_DIR/PROVAR_HOME"
+    PROVAR_PROJECT: "$CI_PROJECT_DIR/QTC_Project"
+    LICENSE_PATH: "$CI_PROJECT_DIR/QTC_Project/.licenses"
+  before_script:
+    - apt-get update && apt-get install -y xvfb wget curl unzip gnupg -qq
+    - apt-get install -y ant
+    - ant -version
+    - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+    - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
+    - apt-get update -y
+    - apt-cache search chrome
+    - apt-get install google-chrome-stable -y
+    - export DISPLAY=:99.0
+    - wget -O /etc/init.d/xvfb https://gist.githubusercontent.com/nxil/eas/3fc13e0c90ad9f58bce903a41e6c/raw/xvfb
+    - chmod 0755 /etc/init.d/xvfb
+    - sh -e /etc/init.d/xvfb start
+  script:
+    - cd QTC_Project/ANT
+    - xvfb-run ant -Dprovar.home=$PROVAR_HOME -Dlicense.path=$LICENSE_PATH -f MJOF_TestCases_build.xml
